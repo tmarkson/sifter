@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { Product } from './types';
 import { Header } from './components/Header';
 import { PromptInput } from './components/PromptInput';
@@ -21,6 +20,7 @@ const App: React.FC = () => {
   const [prompt, setPrompt] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Product; direction: 'asc' | 'desc' } | null>(null);
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) {
@@ -30,6 +30,7 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setProducts([]);
+    setSortConfig(null);
     try {
       const newProducts = await generateComparisonData(prompt);
       setProducts(newProducts);
@@ -40,6 +41,46 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [prompt]);
+  
+  const handleSort = useCallback((key: keyof Product) => {
+    setSortConfig(prevConfig => {
+      if (prevConfig?.key === key) {
+        if (prevConfig.direction === 'asc') {
+          return { key, direction: 'desc' };
+        }
+        return null;
+      }
+      return { key, direction: 'asc' };
+    });
+  }, []);
+
+  const sortedProducts = useMemo(() => {
+    if (!sortConfig) {
+      return products;
+    }
+
+    return [...products].sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      if (aValue == null) return 1;
+      if (bValue == null) return -1;
+
+      let comparison = 0;
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        comparison = aValue - bValue;
+      } else if (sortConfig.key === 'lastModified') {
+        comparison = new Date(aValue as string).getTime() - new Date(bValue as string).getTime();
+      } else if (Array.isArray(aValue) && Array.isArray(bValue)) {
+        comparison = aValue.length - bValue.length;
+      } else {
+        comparison = String(aValue).localeCompare(String(bValue));
+      }
+
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [products, sortConfig]);
+
 
   return (
     <div className="min-h-screen bg-[#1F1F1F] text-gray-300 font-sans p-4 sm:p-6 md:p-8">
@@ -92,7 +133,11 @@ const App: React.FC = () => {
             </div>
         ) : products.length > 0 ? (
             viewMode === 'table' ? (
-                <ComparisonTable products={products} />
+                <ComparisonTable 
+                    products={sortedProducts} 
+                    onSort={handleSort} 
+                    sortConfig={sortConfig} 
+                />
             ) : (
                 <GalleryView products={products} />
             )

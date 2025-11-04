@@ -1,10 +1,10 @@
-
 import React from 'react';
 import type { Product } from '../types';
 import { ClockIcon } from './icons/ClockIcon';
 import { TextIcon } from './icons/TextIcon';
 import { LinkIcon } from './icons/LinkIcon';
 import { DocumentIcon } from './icons/DocumentIcon';
+import { SortArrowIcon } from './icons/SortArrowIcon';
 
 const TAG_COLORS = [
     'bg-red-800/70 text-red-200', 'bg-green-800/70 text-green-200', 'bg-blue-800/70 text-blue-200',
@@ -57,23 +57,43 @@ const formatPrice = (price: number | null) => {
 
 interface ComparisonTableProps {
   products: Product[];
+  onSort: (key: keyof Product) => void;
+  sortConfig: { key: keyof Product; direction: 'asc' | 'desc' } | null;
 }
 
-export const ComparisonTable: React.FC<ComparisonTableProps> = ({ products }) => {
+const SortableHeader: React.FC<{
+  title: string;
+  field: keyof Product;
+  onSort: (key: keyof Product) => void;
+  sortConfig: ComparisonTableProps['sortConfig'];
+  icon: React.ReactNode;
+  className?: string;
+}> = ({ title, field, onSort, sortConfig, icon, className }) => (
+    <th scope="col" className={`px-4 py-3 ${className}`}>
+        <button onClick={() => onSort(field)} className="flex items-center gap-2 w-full text-left uppercase font-bold hover:text-white transition-colors">
+            {icon}
+            <span>{title}</span>
+            {sortConfig?.key === field && <SortArrowIcon direction={sortConfig.direction} />}
+        </button>
+    </th>
+);
+
+
+export const ComparisonTable: React.FC<ComparisonTableProps> = ({ products, onSort, sortConfig }) => {
   return (
     <div className="overflow-x-auto relative rounded-lg border border-gray-800 shadow-lg">
       <table className="w-full text-sm text-left text-gray-400 bg-[#2A2A2A]">
-        <thead className="text-xs text-gray-400 uppercase bg-[#343434] sticky top-0 z-10">
+        <thead className="text-xs text-gray-400 bg-[#343434] sticky top-0 z-10">
           <tr>
-            <th scope="col" className="px-4 py-3 min-w-[200px] border-r border-gray-700"><div className="flex items-center gap-2"><ClockIcon/> Last Modified</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[250px] border-r border-gray-700"><div className="flex items-center gap-2"><TextIcon/> Title</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[150px] border-r border-gray-700"><div className="flex items-center gap-2"><DocumentIcon/> Mfg</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[150px] border-r border-gray-700"><div className="flex items-center gap-2"># Mfg Pn</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[200px] border-r border-gray-700"><div className="flex items-center gap-2"><LinkIcon/> Link</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[120px] border-r border-gray-700"><div className="flex items-center gap-2">Country...</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[150px] border-r border-gray-700"><div className="flex items-center gap-2">Form factor</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[100px] border-r border-gray-700"><div className="flex items-center gap-2"># Price @...</div></th>
-            <th scope="col" className="px-4 py-3 min-w-[400px]"><div className="flex items-center gap-2">Features</div></th>
+            <SortableHeader title="Last Modified" field="lastModified" onSort={onSort} sortConfig={sortConfig} icon={<ClockIcon/>} className="min-w-[200px] border-r border-gray-700"/>
+            <SortableHeader title="Title" field="title" onSort={onSort} sortConfig={sortConfig} icon={<TextIcon/>} className="min-w-[250px] border-r border-gray-700"/>
+            <SortableHeader title="Mfg" field="mfg" onSort={onSort} sortConfig={sortConfig} icon={<DocumentIcon/>} className="min-w-[150px] border-r border-gray-700"/>
+            <SortableHeader title="Mfg Pn" field="mfgPn" onSort={onSort} sortConfig={sortConfig} icon={<>#</>} className="min-w-[150px] border-r border-gray-700"/>
+            <SortableHeader title="Link" field="link" onSort={onSort} sortConfig={sortConfig} icon={<LinkIcon/>} className="min-w-[200px] border-r border-gray-700"/>
+            <SortableHeader title="Country" field="country" onSort={onSort} sortConfig={sortConfig} icon={<>🌎</>} className="min-w-[120px] border-r border-gray-700"/>
+            <SortableHeader title="Form Factor" field="formFactor" onSort={onSort} sortConfig={sortConfig} icon={<>📐</>} className="min-w-[150px] border-r border-gray-700"/>
+            <SortableHeader title="Price" field="price" onSort={onSort} sortConfig={sortConfig} icon={<>#</>} className="min-w-[100px] border-r border-gray-700"/>
+            <SortableHeader title="Features" field="features" onSort={onSort} sortConfig={sortConfig} icon={<>⚙️</>} className="min-w-[400px]"/>
           </tr>
         </thead>
         <tbody>

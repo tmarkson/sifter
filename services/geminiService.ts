@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Product } from '../types';
 
@@ -23,7 +22,7 @@ const schema = {
       title: { type: Type.STRING, description: "The official name or title of the product." },
       mfg: { type: Type.STRING, description: "The name of the manufacturer." },
       mfgPn: { type: Type.STRING, description: "The manufacturer's part number." },
-      link: { type: Type.STRING, description: "A direct URL to the product's official page." },
+      link: { type: Type.STRING, description: "A direct, valid, and publicly accessible URL to the product's official page. Prioritize official manufacturer or major retailer websites. Do not invent URLs. Use null if a valid URL cannot be found." },
       country: { type: Type.STRING, description: "The country of origin for the product." },
       formFactor: { type: Type.STRING, description: "The physical form factor (e.g., 'SBC', 'SOM', 'Boxed SBC')." },
       price: { type: Type.NUMBER, description: "The price in USD for a single unit. Use null if not available." },
@@ -34,7 +33,7 @@ const schema = {
       },
       imageUrl: {
         type: Type.STRING,
-        description: "A direct URL to an image of the product. Should be a full URL ending in .png, .jpg, .webp, etc. Use null if no image is available.",
+        description: "A direct, valid, and publicly accessible URL to an image of the product. Prioritize official sources. Should be a full URL ending in .png, .jpg, .webp, etc. Use null if no valid image is available.",
       },
     },
     required: ["lastModified", "title", "mfg", "mfgPn", "link", "country", "formFactor", "price", "features", "imageUrl"],
@@ -44,7 +43,7 @@ const schema = {
 
 export const generateComparisonData = async (prompt: string): Promise<Product[]> => {
   try {
-    const fullPrompt = `Based on the following request, generate a comparison database of 10 to 15 products. The user wants to compare: "${prompt}". Return the data as a JSON array. Each object in the array should represent a single product and conform to the provided schema. Include realistic but potentially fictional data for all fields. Ensure prices are just numbers, not strings with currency symbols. Find a relevant public image URL for each product.`;
+    const fullPrompt = `Based on the following request, generate a comparison database of 10 to 15 real products. The user wants to compare: "${prompt}". Return the data as a JSON array. Each object in the array must represent a single, real product and conform to the provided schema. All data, especially links and image URLs, must be factual and verifiable. For 'link' and 'imageUrl', provide direct, valid, and publicly accessible URLs. Prioritize official manufacturer or major retailer websites. Do not invent URLs. If a valid URL cannot be found, return null for that field. Prices should be numbers, not strings.`;
     
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
